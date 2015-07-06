@@ -5,7 +5,7 @@ package com.bastly.wearasense.Utils;
  */
 public class VibrationManager {
 
-    private static final int INTERVAL = 50;
+    private static final int INTERVAL = 25;
     private static final long[] none = {0, 0, 0, 0};
     private static final long[] PATTERN_MINIMAL = {INTERVAL, INTERVAL, INTERVAL, 0, INTERVAL};
     private static final long[] patternLow = {INTERVAL, INTERVAL, INTERVAL, INTERVAL};
@@ -16,10 +16,10 @@ public class VibrationManager {
         if (azimut < 0) { // half pointing north
             if (azimut > -45 || azimut < -135) {
                 return none;
-            } else if (azimut > -67 || azimut < -123) {
+            } else if (azimut > -80 || azimut < -100) {
                 return none;
             } else if (azimut > -87 || azimut < -93) {
-                return patternMedium;
+                return patternLow;
             } else {
                 return patternHigh;
             }

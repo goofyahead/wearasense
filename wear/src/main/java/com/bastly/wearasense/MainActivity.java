@@ -1,7 +1,10 @@
 package com.bastly.wearasense;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,6 +16,7 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import com.bastly.wearasense.AlarmReceiver.TimeBroadCastReceiver;
 import com.bastly.wearasense.Utils.VibrationManager;
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -26,6 +30,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Vibrator vibration;
     float azimut;
     private double azimutDegrees;
+    private AlarmManager alarmMgr;
+    private long INTERVAL_MINUTE = 1 * 60 * 1000;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +39,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         setContentView(R.layout.activity_main);
         WindowManager.LayoutParams WMLP = getWindow().getAttributes();
         WMLP.screenBrightness = 0F;
+
+        alarmMgr = (AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, TimeBroadCastReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+
+        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                INTERVAL_MINUTE,
+                INTERVAL_MINUTE, pendingIntent);
 
         vibration = (Vibrator) this.getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -51,21 +65,23 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "accelerometer " + accelerometer + "magnetometer " + magnetometer );
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
         mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
     }
 
     protected void onPause() {
         super.onPause();
-        mSensorManager.unregisterListener(this);
+        mSensorManager.unregisterListener(this, accelerometer);
+        mSensorManager.unregisterListener(this, magnetometer);
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
+
     float[] mGravity;
     float[] mGeomagnetic;
     public void onSensorChanged(SensorEvent event) {
-        if (System.currentTimeMillis() - elapsed > 50) {
             elapsed = System.currentTimeMillis();
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
                 mGravity = event.values;
@@ -82,8 +98,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     Log.d(TAG, "orientation " + Math.toDegrees(azimut));
                     azimutDegrees = Math.toDegrees(azimut);
                     vibration.vibrate(VibrationManager.getPattern(azimutDegrees), -1);
+                } else {
+                    Log.d(TAG, "unsuccessfull getting rotation matrix");
                 }
+            } else {
+                Log.d(TAG, "gravity " + mGravity + "and geomagnetic " + mGeomagnetic);
             }
         }
-    }
 }
