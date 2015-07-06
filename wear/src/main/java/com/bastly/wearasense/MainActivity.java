@@ -23,15 +23,18 @@ public class MainActivity extends Activity implements SensorEventListener {
     private SensorManager mSensorManager;
     Sensor accelerometer;
     Sensor magnetometer;
-    Vibrator vibration;
+    private Vibrator vibration;
     float azimut;
+    private double azimutDegrees;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
+        WindowManager.LayoutParams WMLP = getWindow().getAttributes();
+        WMLP.screenBrightness = 0F;
 
-        vibration = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+        vibration = (Vibrator) this.getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
 
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
@@ -62,7 +65,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     float[] mGravity;
     float[] mGeomagnetic;
     public void onSensorChanged(SensorEvent event) {
-        if (System.currentTimeMillis() - elapsed > 200) {
+        if (System.currentTimeMillis() - elapsed > 50) {
             elapsed = System.currentTimeMillis();
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
                 mGravity = event.values;
@@ -77,7 +80,8 @@ public class MainActivity extends Activity implements SensorEventListener {
                     SensorManager.getOrientation(R, orientation);
                     azimut = orientation[0]; // orientation contains: azimut, pitch and roll
                     Log.d(TAG, "orientation " + Math.toDegrees(azimut));
-                    vibration.vibrate(VibrationManager.getPattern(azimut), -1);
+                    azimutDegrees = Math.toDegrees(azimut);
+                    vibration.vibrate(VibrationManager.getPattern(azimutDegrees), -1);
                 }
             }
         }
